@@ -71,7 +71,8 @@ void umqtt_circ_init(struct umqtt_circ_buffer *buff)
 int umqtt_circ_push(struct umqtt_circ_buffer *buff, uint8_t *data, int len)
 {
 	uint8_t *bend = buff->start + buff->length - 1;
-	uint8_t *dend = buff->pointer + buff->datalen; /* This points to new byte */
+	uint8_t *dend = (buff->pointer - buff->start + buff->datalen)
+		% buff->length + buff->start; /* This points to new byte */
 
 	for (; len > 0; len--) {
 		if (dend > bend)
