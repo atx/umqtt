@@ -92,6 +92,7 @@ void umqtt_connect(struct umqtt_connection *conn, uint16_t kalive, char *cid);
 void umqtt_subscribe(struct umqtt_connection *conn, char *topic);
 void umqtt_publish(struct umqtt_connection *conn, char *topic,
 		uint8_t *data, int datalen);
+void umqtt_ping(struct umqtt_connection *conn);
 void umqtt_process(struct umqtt_connection *conn);
 
 #endif /* __UMQTT_H__ */

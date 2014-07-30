@@ -215,6 +215,14 @@ void umqtt_publish(struct umqtt_connection *conn, char *topic,
 	umqtt_circ_push(&conn->txbuff, data, datalen);
 }
 
+void umqtt_ping(struct umqtt_connection *conn)
+{
+	uint8_t packet[] = { umqtt_build_header(UMQTT_PINGREQ, 0, 0, 0), 0 };
+
+	umqtt_circ_push(&conn->txbuff, packet, sizeof(packet));
+	conn->nack_ping++;
+}
+
 static void umqtt_handle_publish(struct umqtt_connection *conn,
 		uint8_t *data, int len)
 {
