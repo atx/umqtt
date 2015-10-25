@@ -236,11 +236,12 @@ static void umqtt_handle_publish(struct umqtt_connection *conn,
 {
 	uint16_t toplen = (data[0] << 8) | data[1];
 	char topic[toplen + 1];
-	uint8_t payload[len - 2 - toplen];
+	uint8_t payload[len - 2 - toplen + 1];
 
 	memcpy(topic, data + 2, sizeof(topic));
 	topic[sizeof(topic) - 1] = 0;
 	memcpy(payload, data + 2 + toplen, sizeof(payload));
+	payload[sizeof(payload) - 1] = 0;
 
 	conn->message_callback(conn, topic, payload, sizeof(payload));
 }
