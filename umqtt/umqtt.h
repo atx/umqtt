@@ -84,7 +84,7 @@ struct umqtt_connection {
 	((buff)->length == (buff)->datalen)
 
 #define umqtt_circ_is_empty(buff) \
-	(umqtt_circ_datalen() == 0)
+	(umqtt_circ_datalen(buff) == 0)
 
 void umqtt_circ_init(struct umqtt_circ_buffer *buff);
 
