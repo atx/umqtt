@@ -150,9 +150,6 @@ int main(int argc, char *argv[])
 	}
 
 	/* Initialize umqtt */
-	umqtt_circ_init(&u_conn.rxbuff);
-	umqtt_circ_init(&u_conn.txbuff);
-	umqtt_init(&u_conn);
 	if (clid == NULL) {
 		srand(time(NULL));
 		clid = alloca(20);

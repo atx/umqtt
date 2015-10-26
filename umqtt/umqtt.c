@@ -127,15 +127,6 @@ int umqtt_circ_pop(struct umqtt_circ_buffer *buff, uint8_t *data, int len)
 	return i; /* Return the amount of bytes actually popped */
 }
 
-void umqtt_init(struct umqtt_connection *conn)
-{
-	conn->state = UMQTT_STATE_INIT;
-	conn->nack_ping = 0;
-	conn->nack_publish = 0;
-	conn->nack_subscribe = 0;
-	conn->message_id = 1; /* Id 0 is reserved */
-}
-
 void umqtt_connect(struct umqtt_connection *conn, uint16_t kalive, char *cid)
 {
 	int cidlen = strlen(cid);
@@ -143,6 +134,14 @@ void umqtt_connect(struct umqtt_connection *conn, uint16_t kalive, char *cid)
 	uint8_t remlen[4];
 	uint8_t variable[12];
 	uint8_t payload[2 + cidlen];
+
+	umqtt_circ_init(&conn->rxbuff);
+	umqtt_circ_init(&conn->txbuff);
+	conn->state = UMQTT_STATE_INIT;
+	conn->nack_ping = 0;
+	conn->nack_publish = 0;
+	conn->nack_subscribe = 0;
+	conn->message_id = 1;
 
 	fixed = umqtt_build_header(UMQTT_CONNECT, 0, 0, 0);
 
