@@ -24,7 +24,7 @@ static void umqtt_esp_connect_cb(void *arg)
 {
 	struct espconn *conn = arg;
 	struct umqtt_esp_config *cfg = conn->reverse;
-	umqtt_connect(&cfg->umqtt, 60, cfg->cid);
+	umqtt_connect(&cfg->umqtt);
 }
 
 static void umqtt_esp_recv_cb(void *arg, char *pdata, unsigned short len)
@@ -56,7 +56,7 @@ static void umqtt_esp_connected_cb(struct umqtt_connection *umqtt)
 {
 	struct umqtt_esp_config *cfg = umqtt->private;
 	os_timer_setfn(&cfg->ping_timer, umqtt_esp_ping_timer_cb, cfg);
-	os_timer_arm(&cfg->ping_timer, cfg->kalive * 1000, 1);
+	os_timer_arm(&cfg->ping_timer, cfg->umqtt.kalive * 1000, 1);
 	if (cfg->connected_callback)
 		cfg->connected_callback(umqtt);
 }

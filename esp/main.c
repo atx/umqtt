@@ -40,11 +40,11 @@ uint8_t rxbuff[1024];
 uint8_t txbuff[1024];
 
 struct umqtt_esp_config umqttconfig = {
-	.cid = "esp-umqtt",
 	.hostname = MQTT_SERVER,
 	.port = 1883,
-	.kalive = 60,
 	.umqtt = {
+		.clientid = "esp-umqtt",
+		.kalive = 60,
 		.rxbuff = {
 			.start = rxbuff,
 			.length = sizeof(rxbuff),

@@ -62,6 +62,7 @@ void message_callback(struct umqtt_connection *uc, char *topic, uint8_t *data,
 }
 
 struct umqtt_connection u_conn = {
+	.kalive = 30,
 	.txbuff = {
 		.start = u_txbuff,
 		.length = sizeof(u_txbuff),
@@ -152,14 +153,16 @@ int main(int argc, char *argv[])
 	/* Initialize umqtt */
 	if (clid == NULL) {
 		srand(time(NULL));
-		clid = alloca(20);
+		clid = malloc(20);
 		snprintf(clid, 20, "umqtt-%d", rand());
 	}
+	u_conn.clientid = clid;
 
 	if (verbose)
 		printf("Connecting to %s:%d with client id \"%s\"\n", host, port, clid);
 
-	umqtt_connect(&u_conn, 30, clid);
+
+	umqtt_connect(&u_conn);
 
 	/* Enter main loop */
 	while (true) {

@@ -21,10 +21,8 @@
 #include "umqtt.h"
 
 struct umqtt_esp_config {
-	char *cid;
 	char *hostname;
 	int port;
-	int kalive;
 	struct umqtt_connection umqtt;
 
 	void (*connected_callback)(struct umqtt_connection *);

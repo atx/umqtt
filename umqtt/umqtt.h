@@ -59,6 +59,8 @@ struct umqtt_circ_buffer {
 struct umqtt_connection {
 	struct umqtt_circ_buffer txbuff;
 	struct umqtt_circ_buffer rxbuff;
+	uint16_t kalive;
+	char *clientid;
 
 	void (*connected_callback)(struct umqtt_connection *);
 	void (*message_callback)(struct umqtt_connection *,
@@ -99,7 +101,7 @@ int umqtt_circ_push(struct umqtt_circ_buffer *buff, uint8_t *data, int len);
 int umqtt_circ_pop(struct umqtt_circ_buffer *buff, uint8_t *data, int len);
 int umqtt_circ_peek(struct umqtt_circ_buffer *buff, uint8_t *data, int len);
 
-void umqtt_connect(struct umqtt_connection *conn, uint16_t kalive, char *cid);
+void umqtt_connect(struct umqtt_connection *conn);
 void umqtt_subscribe(struct umqtt_connection *conn, char *topic);
 void umqtt_publish(struct umqtt_connection *conn, char *topic,
 		uint8_t *data, int datalen);

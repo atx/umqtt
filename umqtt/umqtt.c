@@ -127,9 +127,9 @@ int umqtt_circ_pop(struct umqtt_circ_buffer *buff, uint8_t *data, int len)
 	return i; /* Return the amount of bytes actually popped */
 }
 
-void umqtt_connect(struct umqtt_connection *conn, uint16_t kalive, char *cid)
+void umqtt_connect(struct umqtt_connection *conn)
 {
-	int cidlen = strlen(cid);
+	int cidlen = strlen(conn->clientid);
 	uint8_t fixed;
 	uint8_t remlen[4];
 	uint8_t variable[12];
@@ -158,12 +158,12 @@ void umqtt_connect(struct umqtt_connection *conn, uint16_t kalive, char *cid)
 
 	variable[9] = 0b00000010; /* Clean session flag */
 
-	variable[10] = kalive >> 8; /* Keep Alive timer */
-	variable[11] = kalive & 0xff;
+	variable[10] = conn->kalive >> 8; /* Keep Alive timer */
+	variable[11] = conn->kalive & 0xff;
 
 	payload[0] = cidlen >> 8;
 	payload[1] = cidlen & 0xff;
-	memcpy(&payload[2], cid, cidlen);
+	memcpy(&payload[2], conn->clientid, cidlen);
 
 	umqtt_circ_push(&conn->txbuff, &fixed, 1);
 	umqtt_circ_push(&conn->txbuff, remlen,
