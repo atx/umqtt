@@ -172,6 +172,8 @@ void umqtt_connect(struct umqtt_connection *conn, uint16_t kalive, char *cid)
 	umqtt_circ_push(&conn->txbuff, payload, sizeof(payload));
 
 	conn->state = UMQTT_STATE_CONNECTING;
+	if (conn->new_packet_callback)
+		conn->new_packet_callback(conn);
 }
 
 void umqtt_subscribe(struct umqtt_connection *conn, char *topic)
@@ -198,6 +200,8 @@ void umqtt_subscribe(struct umqtt_connection *conn, char *topic)
 	umqtt_circ_push(&conn->txbuff, payload, sizeof(payload));
 
 	conn->nack_subscribe++;
+	if (conn->new_packet_callback)
+		conn->new_packet_callback(conn);
 }
 
 void umqtt_publish(struct umqtt_connection *conn, char *topic,
@@ -220,6 +224,8 @@ void umqtt_publish(struct umqtt_connection *conn, char *topic,
 	umqtt_circ_push(&conn->txbuff, (uint8_t *) topic, toplen);
 
 	umqtt_circ_push(&conn->txbuff, data, datalen);
+	if (conn->new_packet_callback)
+		conn->new_packet_callback(conn);
 }
 
 void umqtt_ping(struct umqtt_connection *conn)
@@ -228,6 +234,8 @@ void umqtt_ping(struct umqtt_connection *conn)
 
 	umqtt_circ_push(&conn->txbuff, packet, sizeof(packet));
 	conn->nack_ping++;
+	if (conn->new_packet_callback)
+		conn->new_packet_callback(conn);
 }
 
 static void umqtt_handle_publish(struct umqtt_connection *conn,
@@ -254,10 +262,14 @@ static void umqtt_packet_arrived(struct umqtt_connection *conn,
 
 	switch (umqtt_header_type(header)) {
 	case UMQTT_CONNACK:
-		if (data[1] == 0x00)
+		if (data[1] == 0x00) {
 			conn->state = UMQTT_STATE_CONNECTED;
-		else
+			if (conn->connected_callback)
+				conn->connected_callback(conn);
+		}
+		else {
 			conn->state = UMQTT_STATE_FAILED;
+		}
 		break;
 	case UMQTT_SUBACK:
 		conn->nack_subscribe--;
