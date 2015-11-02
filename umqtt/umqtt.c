@@ -26,6 +26,15 @@
 
 #include "umqtt.h"
 
+static inline uint16_t htons(uint16_t x)
+{
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+	return ((x & 0xff) << 8) | (x >> 8);
+#else
+	return x;
+#endif
+}
+
 #define umqtt_insert_messageid(conn, ptr) \
 	do { \
 		ptr[0] = conn->message_id >> 8;		\
@@ -133,7 +142,7 @@ void umqtt_connect(struct umqtt_connection *conn)
 	uint8_t fixed;
 	uint8_t remlen[4];
 	uint8_t variable[12];
-	uint8_t payload[2 + cidlen];
+	uint16_t paylen;
 
 	umqtt_circ_init(&conn->rxbuff);
 	umqtt_circ_init(&conn->txbuff);
@@ -161,15 +170,14 @@ void umqtt_connect(struct umqtt_connection *conn)
 	variable[10] = conn->kalive >> 8; /* Keep Alive timer */
 	variable[11] = conn->kalive & 0xff;
 
-	payload[0] = cidlen >> 8;
-	payload[1] = cidlen & 0xff;
-	memcpy(&payload[2], conn->clientid, cidlen);
+	paylen = htons(cidlen);
 
 	umqtt_circ_push(&conn->txbuff, &fixed, 1);
 	umqtt_circ_push(&conn->txbuff, remlen,
-			umqtt_encode_length(sizeof(variable) + sizeof(payload), remlen));
+			umqtt_encode_length(sizeof(variable) + sizeof(paylen) + cidlen, remlen));
 	umqtt_circ_push(&conn->txbuff, variable, sizeof(variable));
-	umqtt_circ_push(&conn->txbuff, payload, sizeof(payload));
+	umqtt_circ_push(&conn->txbuff, (uint8_t *) &paylen, sizeof(paylen));
+	umqtt_circ_push(&conn->txbuff, conn->clientid, cidlen);
 
 	conn->state = UMQTT_STATE_CONNECTING;
 	if (conn->new_packet_callback)
@@ -178,26 +186,27 @@ void umqtt_connect(struct umqtt_connection *conn)
 
 void umqtt_subscribe(struct umqtt_connection *conn, char *topic)
 {
-	int topiclen = strlen(topic);
+	uint16_t topiclen = strlen(topic);
 	uint8_t fixed;
 	uint8_t remlen[4];
 	uint8_t messageid[2];
-	uint8_t payload[2 + topiclen + 1];
+	uint16_t paylen;
+	uint8_t qos = 0;
 
 	fixed = umqtt_build_header(UMQTT_SUBSCRIBE, 0, 1, 0);
 
 	umqtt_insert_messageid(conn, messageid);
 
-	payload[0] = topiclen >> 8; /* String length */
-	payload[1] = topiclen & 0xff;
-	memcpy(&payload[2], topic, topiclen);
-	payload[2 + topiclen] = 0; /* QoS */
+	paylen = htons(topiclen);
 
 	umqtt_circ_push(&conn->txbuff, &fixed, 1);
 	umqtt_circ_push(&conn->txbuff, remlen,
-			umqtt_encode_length(sizeof(messageid) + sizeof(payload), remlen));
+			umqtt_encode_length(
+				sizeof(messageid) + sizeof(paylen) + topiclen + sizeof(qos), remlen));
 	umqtt_circ_push(&conn->txbuff, messageid, sizeof(messageid));
-	umqtt_circ_push(&conn->txbuff, payload, sizeof(payload));
+	umqtt_circ_push(&conn->txbuff, (uint8_t *) &paylen, sizeof(paylen));
+	umqtt_circ_push(&conn->txbuff, topic, topiclen);
+	umqtt_circ_push(&conn->txbuff, &qos, sizeof(qos));
 
 	conn->nack_subscribe++;
 	if (conn->new_packet_callback)
